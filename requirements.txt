@@ -9,4 +9,3 @@ konlpy>=0.5.0
 folium>=0.12.0
 geopy>=2.0.0
 streamlit-folium>=0.1.0
-japanize_matplotlib>=1.0.0

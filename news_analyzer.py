@@ -10,7 +10,8 @@ import folium
 from folium.plugins import HeatMap
 from streamlit_folium import folium_static
 import matplotlib.pyplot as plt
-import japanize_matplotlib
+plt.rcParams['font.family'] = 'Malgun Gothic'
+plt.rcParams['axes.unicode_minus'] = False
 
 # 페이지 설정
 st.set_page_config(
