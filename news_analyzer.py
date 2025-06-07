@@ -317,104 +317,44 @@ if uploaded_file is not None:
                         'color': f'hsl({random.randint(0, 360)}, 70%, 50%)'
                     })
                 
-                # HTML/JS 코드 생성
-                # JavaScript 코드 내의 중괄호를 이중으로 처리하여 f-string 충돌 방지
-                words_js_str = json.dumps(words_js, ensure_ascii=False)
+                # wordcloud 라이브러리를 사용하여 워드클라우드 생성
+                from wordcloud import WordCloud
+                import matplotlib.pyplot as plt
+                from io import BytesIO
+                import base64
                 
-                # HTML 템플릿을 별도 문자열로 정의
-                wordcloud_html = """
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Word Cloud</title>
-                    <script src="https://d3js.org/d3.v7.min.js"></script>
-                    <script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3.layout.cloud.js"></script>
-                    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
-                    <style>
-                        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
-                        @font-face {
-                            font-family: 'Noto Sans KR';
-                            font-style: normal;
-                            font-weight: 400;
-                            src: url(https://fonts.gstatic.com/s/notosanskr/v36/PbykFmXiEBPT4ITbgNA5CgmOsk7A.otf) format('opentype');
-                        }
-                        body {
-                            font-family: Noto Sans KR, -apple-system, BlinkMacSystemFont, sans-serif;
-                            margin: 0;
-                            overflow: hidden;
-                        }
-                        #wordcloud {
-                            width: 100%;
-                            height: 500px;
-                        }
-                        .word {
-                            cursor: pointer;
-                            transition: all 0.2s ease-out;
-                            opacity: 0.9;
-                        }
-                        .word:hover {
-                            fill: #2c7be5 !important;
-                            opacity: 1;
-                            text-shadow: 0 0 8px rgba(44, 123, 229, 0.3);
-                            transform: translateY(-2px);
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div id="wordcloud"></div>
-                    <script>
-                        const words = """ + {words_js_str} + """;
-                        const wordsData = JSON.parse(words);
-                        
-                        const width = document.getElementById('wordcloud').offsetWidth;
-                        const height = 500;
-                        
-                        const color = d3.scaleOrdinal(d3.schemeCategory10);
-                        
-                        const layout = d3.layout.cloud()
-                            .size([width, height])
-                            .words(wordsData)
-                            .padding(5)
-                            .rotate(function() {{ return Math.random() > 0.5 ? 0 : 90; }})
-                            .font("Noto Sans KR")
-                            .fontSize(function(d) {{ return d.size; }})
-                            .on("end", draw);
-                        
-                        function draw(words) {{
-                            d3.select("#wordcloud")
-                                .append("svg")
-                                .attr("width", width)
-                                .attr("height", height)
-                                .append("g")
-                                .attr("transform", "translate(" + (width/2) + "," + (height/2) + ")")
-                                .selectAll("text")
-                                .data(words)
-                                .enter().append("text")
-                                .style("font-size", function(d) {{ return d.size + "px"; }})
-                                .style("font-family", 'Noto Sans KR, -apple-system, BlinkMacSystemFont, sans-serif')
-                                .style("fill", function(d) {{ return d.color; }})
-                                .attr("text-anchor", "middle")
-                                .attr("class", "word")
-                                .attr("transform", function(d) {{ 
-                                    return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")"; 
-                                }})
-                                .text(function(d) {{ return d.text; }});
-                        }}
-                        
-                        layout.start();
-                        
-                        window.addEventListener('resize', function() {{
-                            d3.select("#wordcloud").select("svg").remove();
-                            layout.size([document.getElementById('wordcloud').offsetWidth, height]).start();
-                        }}, false);
-                    </script>
-                </body>
-                </html>
-                """.format(words_js_str=words_js_str)
+                # 워드클라우드 생성
+                wordcloud = WordCloud(
+                    width=800,
+                    height=500,
+                    background_color='white',
+                    font_path='CookieRun Regular.ttf',  # 프로젝트 폴더의 CookieRun 폰트 사용
+                    max_words=top_n,
+                    max_font_size=200,
+                    random_state=42
+                )
                 
-                # HTML 표시
-                st.components.v1.html(wordcloud_html, height=550)
+                # 워드클라우드에 단어 추가
+                wordcloud.generate_from_frequencies(top_keywords)
+                
+                # 이미지를 스트림릿에 표시하기 위해 BytesIO에 저장
+                img = BytesIO()
+                plt.figure(figsize=(10, 6))
+                plt.imshow(wordcloud, interpolation='bilinear')
+                plt.axis('off')
+                plt.tight_layout(pad=0)
+                plt.savefig(img, format='png', bbox_inches='tight', pad_inches=0)
+                plt.close()
+                
+                # Base64로 인코딩하여 이미지 표시
+                img.seek(0)
+                img_b64 = base64.b64encode(img.getvalue()).decode()
+                st.markdown(
+                    f'<div style="text-align: center;">'
+                    f'<img src="data:image/png;base64,{img_b64}" style="max-width: 100%; height: auto;"/>'
+                    f'</div>',
+                    unsafe_allow_html=True
+                )
                 
             except Exception as e:
                 st.error(f'워드클라우드 생성 중 오류가 발생했습니다: {str(e)}')
