@@ -340,7 +340,7 @@ if uploaded_file is not None:
                             src: url(https://fonts.gstatic.com/s/notosanskr/v36/PbykFmXiEBPT4ITbgNA5CgmOsk7A.otf) format('opentype');
                         }
                         body {
-                            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+                            font-family: Noto Sans KR, -apple-system, BlinkMacSystemFont, sans-serif;
                             margin: 0;
                             overflow: hidden;
                         }
@@ -364,18 +364,14 @@ if uploaded_file is not None:
                 <body>
                     <div id="wordcloud"></div>
                     <script>
-                        // 워드클라우드 데이터
                         const words = """ + {words_js_str} + """;
                         const wordsData = JSON.parse(words);
                         
-                        // 차트 크기 설정
                         const width = document.getElementById('wordcloud').offsetWidth;
                         const height = 500;
                         
-                        // 색상 스케일
                         const color = d3.scaleOrdinal(d3.schemeCategory10);
                         
-                        // 워드클라우드 레이아웃 설정
                         const layout = d3.layout.cloud()
                             .size([width, height])
                             .words(wordsData)
@@ -385,7 +381,6 @@ if uploaded_file is not None:
                             .fontSize(function(d) {{ return d.size; }})
                             .on("end", draw);
                         
-                        // 워드클라우드 그리기
                         function draw(words) {{
                             d3.select("#wordcloud")
                                 .append("svg")
@@ -397,7 +392,7 @@ if uploaded_file is not None:
                                 .data(words)
                                 .enter().append("text")
                                 .style("font-size", function(d) {{ return d.size + "px"; }})
-                                .style("font-family", "'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif")
+                                .style("font-family", 'Noto Sans KR, -apple-system, BlinkMacSystemFont, sans-serif')
                                 .style("fill", function(d) {{ return d.color; }})
                                 .attr("text-anchor", "middle")
                                 .attr("class", "word")
@@ -407,10 +402,8 @@ if uploaded_file is not None:
                                 .text(function(d) {{ return d.text; }});
                         }}
                         
-                        // 워드클라우드 시작
                         layout.start();
                         
-                        // 창 크기 변경 시 리사이즈
                         window.addEventListener('resize', function() {{
                             d3.select("#wordcloud").select("svg").remove();
                             layout.size([document.getElementById('wordcloud').offsetWidth, height]).start();
