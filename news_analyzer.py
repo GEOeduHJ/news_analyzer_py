@@ -16,6 +16,17 @@ import json
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 
+# WordCloud에 사용할 폰트 경로 설정
+import os
+import platform
+
+# Windows에서 Malgun Gothic 폰트의 경로
+if platform.system() == 'Windows':
+    font_path = os.path.join(os.environ['WINDIR'], 'Fonts', 'malgun.ttf')
+else:
+    # 다른 시스템에서는 기본 폰트 사용
+    font_path = None
+
 # 페이지 설정
 st.set_page_config(
     page_title="뉴스 데이터 분석 대시보드",
