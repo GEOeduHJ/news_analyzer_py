@@ -416,6 +416,9 @@ if uploaded_file is not None:
                     node_y.append(y)
                     node_text.append(f"{node}<br>연결 수: {G_filtered.degree[node]}")
                 
+                # 노드의 연결 수에 따라 색상 계산
+                node_degrees = [G_filtered.degree[node] for node in G_filtered.nodes()]
+                
                 node_trace = go.Scatter(
                     x=node_x, y=node_y,
                     mode='markers+text',
@@ -424,17 +427,17 @@ if uploaded_file is not None:
                     hovertext=node_text,
                     hoverinfo='text',
                     marker=dict(
-                        showscale=True,
-                        colorscale='YlGnBu',
                         size=10,
-                        color=[G_filtered.degree[node] for node in G_filtered.nodes()],
+                        color=node_degrees,
+                        colorscale='YlGnBu',
+                        showscale=True,
                         colorbar=dict(
                             thickness=15,
                             title='연결 수',
                             xanchor='left',
                             titleside='right'
                         ),
-                        line_width=2
+                        line=dict(width=2, color='DarkSlateGrey')
                     )
                 )
                 
