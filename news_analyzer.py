@@ -116,8 +116,8 @@ if uploaded_file is not None:
             def load_sigungu_coordinates():
                 """시군구 좌표 데이터를 로드"""
                 try:
-                    # 현재 스크립트의 디렉토리 경로를 기준으로 파일 찾기
-                    script_dir = os.path.dirname(os.path.abspath(__file__))
+                    # Streamlit Cloud에서의 고정된 파일 경로
+                    script_dir = "/mount/src/news_analyzer_py"
                     coords_df = pd.read_csv(os.path.join(script_dir, 'sigungu_coordinates.csv'), encoding='utf-8-sig')
                     # 좌표 사전 생성 (시군구명 -> (위도, 경도))
                     coords_dict = {}
