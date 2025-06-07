@@ -301,39 +301,131 @@ if uploaded_file is not None:
             
             # 워드클라우드 생성
             try:
-                # 한글 폰트 설정 - Windows 기본 폰트 사용
-                import matplotlib.font_manager as fm
+                import json
+                import random
                 
-                # Windows 기본 폰트 경로 찾기
-                font_path = None
-                for font in fm.fontManager.ttflist:
-                    if 'malgun' in font.name.lower():
-                        font_path = font.fname
-                        break
+                # 워드클라우드 데이터 준비
+                words_js = []
+                max_count = max(top_keywords.values()) if top_keywords else 1
                 
-                if font_path is None:
-                    # 맑은 고딕이 없을 경우 시스템 기본 폰트 사용
-                    font_path = fm.findfont(fm.FontProperties(family='sans-serif'))
+                for word, count in top_keywords.items():
+                    # 폰트 크기 계산 (빈도수에 비례)
+                    size = 12 + int(40 * (count / max_count))
+                    words_js.append({
+                        'text': word,
+                        'size': size,
+                        'color': f'hsl({random.randint(0, 360)}, 70%, 50%)'
+                    })
                 
-                # 워드클라우드 생성
-                wc = WordCloud(
-                    font_path=font_path,
-                    background_color="white",
-                    width=1000,
-                    height=500,
-                    max_words=top_n,
-                    colormap='viridis',
-                    prefer_horizontal=0.9
-                ).generate_from_frequencies(top_keywords)
+                # HTML/JS 코드 생성
+                # JavaScript 코드 내의 중괄호를 이중으로 처리하여 f-string 충돌 방지
+                words_js_str = json.dumps(words_js, ensure_ascii=False)
                 
-                # 이미지로 변환하여 표시
-                fig, ax = plt.subplots(figsize=(12, 6))
-                ax.imshow(wc, interpolation="bilinear")
-                ax.axis("off")
-                st.pyplot(fig)
+                wordcloud_html = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Word Cloud</title>
+                    <script src="https://d3js.org/d3.v7.min.js"></script>
+                    <script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3.layout.cloud.js"></script>
+                    <style>
+                        body {{
+                            font-family: 'Noto Sans KR', sans-serif;
+                            margin: 0;
+                            overflow: hidden;
+                        }}
+                        #wordcloud {{
+                            width: 100%;
+                            height: 500px;
+                        }}
+                        .word {{
+                            cursor: pointer;
+                            transition: all 0.2s ease-out;
+                            opacity: 0.9;
+                        }}
+                        .word:hover {{
+                            fill: #2c7be5 !important;
+                            opacity: 1;
+                            text-shadow: 0 0 8px rgba(44, 123, 229, 0.3);
+                            transform: translateY(-2px);
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div id="wordcloud"></div>
+                    <script>
+                        // 워드클라우드 데이터
+                        const words = {words_js_str};
+                        
+                        // 차트 크기 설정
+                        const width = document.getElementById('wordcloud').offsetWidth;
+                        const height = 500;
+                        
+                        // 색상 스케일
+                        const color = d3.scaleOrdinal(d3.schemeCategory10);
+                        
+                        // 워드클라우드 레이아웃 설정
+                        const layout = d3.layout.cloud()
+                            .size([width, height])
+                            .words(words)
+                            .padding(5)
+                            .rotate(() => Math.random() > 0.5 ? 0 : 90)
+                            .font("Noto Sans KR")
+                            .fontSize(d => d.size)
+                            .on("end", draw);
+                        
+                        // 워드클라우드 그리기
+                        function draw(words) {{
+                            d3.select("#wordcloud")
+                                .append("svg")
+                                .attr("width", width)
+                                .attr("height", height)
+                                .append("g")
+                                .attr("transform", "translate(" + (width/2) + "," + (height/2) + ")")
+                                .selectAll("text")
+                                .data(words)
+                                .enter().append("text")
+                                .style("font-size", function(d) {{ return d.size + "px"; }})
+                                .style("font-family", "'Noto Sans KR', sans-serif")
+                                .style("fill", function(d) {{ return d.color; }})
+                                .attr("text-anchor", "middle")
+                                .attr("class", "word")
+                                .attr("transform", function(d) {{ 
+                                    return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")"; 
+                                }})
+                                .text(function(d) {{ return d.text; }});
+                        }}
+                        
+                        // 워드클라우드 시작
+                        layout.start();
+                        
+                        // 창 크기 변경 시 리사이즈
+                        window.addEventListener('resize', function() {{
+                            d3.select("#wordcloud").select("svg").remove();
+                            layout.size([document.getElementById('wordcloud').offsetWidth, height]).start();
+                        }}, false);
+                    </script>
+                    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+                </body>
+                </html>
+                """
+                
+                # HTML 표시
+                st.components.v1.html(wordcloud_html, height=550)
                 
             except Exception as e:
                 st.error(f'워드클라우드 생성 중 오류가 발생했습니다: {str(e)}')
+                st.warning('키워드 빈도수 차트로 대체합니다.')
+                
+                # 키워드 빈도수 차트 표시 (폴백)
+                if top_keywords:
+                    df = pd.DataFrame({
+                        '키워드': list(top_keywords.keys()),
+                        '빈도수': list(top_keywords.values())
+                    })
+                    fig = px.bar(df, x='키워드', y='빈도수', title='키워드 빈도수')
+                    st.plotly_chart(fig, use_container_width=True)
         else:
             st.warning("업로드한 파일에 '키워드' 열이 없습니다.")
             
