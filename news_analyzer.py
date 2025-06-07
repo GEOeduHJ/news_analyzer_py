@@ -112,23 +112,17 @@ if uploaded_file is not None:
         st.header("🗺️ 분석 0: 지명 빈도수 히트맵")
         
         if '키워드' in display_df.columns:
-            # 시군구 좌표 데이터 로드
+            # 시군구 좌표 데이터를 직접 정의
             @st.cache_data
             def load_sigungu_coordinates():
                 """시군구 좌표 데이터를 로드"""
                 try:
-                    # Streamlit Cloud에서의 고정된 파일 경로
-                    script_dir = "/mount/src/news_analyzer_py"
-                    json_path = os.path.join(script_dir, 'sigungu_coordinates.json')
-                    
-                    # JSON 파일 읽기
-                    with open(json_path, 'r', encoding='utf-8') as f:
-                        coords_dict = json.load(f)
-                    
-                    # 좌표 튜플로 변환
-                    for location, coords in coords_dict.items():
-                        coords_dict[location] = (coords['lat'], coords['lon'])
-                    
+                    # 시군구 좌표 데이터 (직접 정의)
+                    coords_dict = {
+                        "서울특별시 강남구": (37.5112, 127.0569),
+                        "서울특별시 강동구": (37.5332, 127.1239),
+                        "서울특별시 강북구": (37.6287, 127.0266),
+                    }
                     return coords_dict
                 except Exception as e:
                     st.error(f"시군구 좌표 로드 중 오류: {e}")
