@@ -329,9 +329,17 @@ if uploaded_file is not None:
                     <title>Word Cloud</title>
                     <script src="https://d3js.org/d3.v7.min.js"></script>
                     <script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3.layout.cloud.js"></script>
+                    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
                     <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+                        @font-face {{
+                            font-family: 'Noto Sans KR';
+                            font-style: normal;
+                            font-weight: 400;
+                            src: url(https://fonts.gstatic.com/s/notosanskr/v36/PbykFmXiEBPT4ITbgNA5CgmOsk7A.otf) format('opentype');
+                        }}
                         body {{
-                            font-family: 'Noto Sans KR', sans-serif;
+                            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
                             margin: 0;
                             overflow: hidden;
                         }}
@@ -387,7 +395,7 @@ if uploaded_file is not None:
                                 .data(words)
                                 .enter().append("text")
                                 .style("font-size", function(d) {{ return d.size + "px"; }})
-                                .style("font-family", "'Noto Sans KR', sans-serif")
+                                .style("font-family", "'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif")
                                 .style("fill", function(d) {{ return d.color; }})
                                 .attr("text-anchor", "middle")
                                 .attr("class", "word")
