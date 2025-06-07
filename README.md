@@ -40,5 +40,48 @@ streamlit run news_analyzer.py
 - plotly
 - wordcloud
 - networkx
+- matplotlib
+- openpyxl
+- konlpy
+- folium
+- geopy
+- streamlit-folium
+- japanize_matplotlib
+
+## GitHub 액션 설정
+
+GitHub 액션을 통해 자동 배포를 설정할 수 있습니다. `.github/workflows` 디렉토리에 `deploy.yml` 파일을 생성하세요:
+
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+```
+- pandas
+- plotly
+- wordcloud
+- networkx
 - folium
 - openpyxl
