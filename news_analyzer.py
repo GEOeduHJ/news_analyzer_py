@@ -124,7 +124,7 @@ if uploaded_file is not None:
             try:
                 # 시군구 좌표 데이터 (직접 정의)
                 coords_dict = {
-                            "춘천시": {
+  "춘천시": {
     "lat": 37.8907502944142,
     "lon": 127.73855024742944
   },
@@ -1023,8 +1023,8 @@ if uploaded_file is not None:
   "단양군": {
     "lat": 36.99500218415685,
     "lon": 128.38871042193472
-  }
-                    }
+  }                        
+                }
                 return coords_dict
             except Exception as e:
                 st.error(f"시군구 좌표 로드 중 오류: {e}")
@@ -1038,49 +1038,36 @@ if uploaded_file is not None:
                 """키워드 시리즈에서 지명 빈도수를 계산"""
                 location_counts = defaultdict(int)
 
-                # 시군구명을 포함하는 다양한 표현을 미리 준비
-                location_patterns = {}
-                for location in coords_dict.keys():
-                    # 시군구명의 변형된 표현들
-                    patterns = [
-                        location,  # 정확한 이름
-                        location.replace('시', ''),  # 시를 제거한 경우
-                        location.replace('군', ''),  # 군을 제거한 경우
-                            location.replace('구', ''),  # 구를 제거한 경우
-                            location.replace('시', '').replace('군', '').replace('구', ''),  # 모든 접미사를 제거한 경우
-                            f'{location}에',  # 위치 + 에
-                            f'{location}에서',  # 위치 + 에서
-                            f'{location}의',  # 위치 + 의
-                        ]
-                    location_patterns[location] = patterns
-
+                # 모든 시군구명에서 접미사를 제거한 기본 이름만 저장
+                base_names = {loc: loc.replace('시', '').replace('군', '').replace('구', '') 
+                  for loc in coords_dict.keys()}
+    
                 for keywords in keywords_series.dropna():
                     if not isinstance(keywords, str):
                         continue
-                        
-                    # 한국어 키워드를 다양한 구분자로 분리
-                    for kw in re.split(r'[\s,;:/()]+', keywords.strip()):
-                        kw = kw.strip()
-                        if not kw or len(kw) < 2:
-                            continue
-                            
-                        # 모든 시군구명의 패턴을 검사
-                        for location, patterns in location_patterns.items():
-                            for pattern in patterns:
-                                if pattern in kw:
-                                    # 정확한 매치는 더 높은 가중치 부여
-                                    if pattern == location or pattern == kw:
-                                        location_counts[location] += 3
-                                    else:
-                                        location_counts[location] += 1
-                                    break
-                                else:
-                                    continue
-                                break
+            
+                # 한국어 키워드를 다양한 구분자로 분리
+                for kw in re.split(r'[\s,;:/()]+', keywords.strip()):
+                    kw = kw.strip()
+                    if not kw or len(kw) < 2:
+                        continue
+                
+                # 접미사 제거한 키워드로 비교
+                kw_base = kw.replace('시', '').replace('군', '').replace('구', '')
+            
+                # 모든 시군구명과 비교
+                for location, base_name in base_names.items():
+                    if base_name in kw_base:
+                        # 정확한 매치는 더 높은 가중치 부여
+                        if kw_base == base_name:
+                            location_counts[location] += 3
+                        else:
+                            location_counts[location] += 1
+                        break
 
                 return location_counts
                 
-                # 지명 빈도수 계산
+            # 지명 빈도수 계산
             location_counts = get_location_frequency(display_df['키워드'], coords_dict)
     
             if location_counts and sum(location_counts.values()) > 0:
