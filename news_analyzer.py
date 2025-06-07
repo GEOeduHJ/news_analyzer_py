@@ -13,19 +13,10 @@ from streamlit_folium import folium_static
 import matplotlib.pyplot as plt
 import os
 import json
-plt.rcParams['font.family'] = 'Malgun Gothic'
-plt.rcParams['axes.unicode_minus'] = False
-
-# WordCloud에 사용할 폰트 경로 설정
-import os
 import platform
-
-# Windows에서 Malgun Gothic 폰트의 경로
-if platform.system() == 'Windows':
-    font_path = os.path.join(os.environ['WINDIR'], 'Fonts', 'malgun.ttf')
-else:
-    # 다른 시스템에서는 기본 폰트 사용
-    font_path = None
+from PIL import Image
+import io
+import base64
 
 # 페이지 설정
 st.set_page_config(
@@ -310,27 +301,39 @@ if uploaded_file is not None:
             
             # 워드클라우드 생성
             try:
-                # Try to use a system font for Korean text
+                # 한글 폰트 설정 - Windows 기본 폰트 사용
+                import matplotlib.font_manager as fm
+                
+                # Windows 기본 폰트 경로 찾기
+                font_path = None
+                for font in fm.fontManager.ttflist:
+                    if 'malgun' in font.name.lower():
+                        font_path = font.fname
+                        break
+                
+                if font_path is None:
+                    # 맑은 고딕이 없을 경우 시스템 기본 폰트 사용
+                    font_path = fm.findfont(fm.FontProperties(family='sans-serif'))
+                
+                # 워드클라우드 생성
                 wc = WordCloud(
-                    font_path="NanumGothic",  # Try to use system font
+                    font_path=font_path,
                     background_color="white",
-                    width=800,
-                    height=400
+                    width=1000,
+                    height=500,
+                    max_words=top_n,
+                    colormap='viridis',
+                    prefer_horizontal=0.9
                 ).generate_from_frequencies(top_keywords)
-            except:
-                # Fallback to default font if system font is not available
-                wc = WordCloud(
-                    background_color="white",
-                    width=800,
-                    height=400
-                ).generate_from_frequencies(top_keywords)
-            
-            # 워드클라우드 표시
-            st.set_option('deprecation.showPyplotGlobalUse', False)
-            plt.figure(figsize=(12, 6))
-            plt.imshow(wc, interpolation="bilinear")
-            plt.axis("off")
-            st.pyplot()
+                
+                # 이미지로 변환하여 표시
+                fig, ax = plt.subplots(figsize=(12, 6))
+                ax.imshow(wc, interpolation="bilinear")
+                ax.axis("off")
+                st.pyplot(fig)
+                
+            except Exception as e:
+                st.error(f'워드클라우드 생성 중 오류가 발생했습니다: {str(e)}')
         else:
             st.warning("업로드한 파일에 '키워드' 열이 없습니다.")
             
