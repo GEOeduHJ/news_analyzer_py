@@ -118,12 +118,16 @@ if uploaded_file is not None:
                 try:
                     # Streamlit Cloud에서의 고정된 파일 경로
                     script_dir = "/mount/src/news_analyzer_py"
-                    coords_df = pd.read_csv(os.path.join(script_dir, 'sigungu_coordinates.csv'), encoding='utf-8-sig')
-                    # 좌표 사전 생성 (시군구명 -> (위도, 경도))
-                    coords_dict = {}
-                    for _, row in coords_df.iterrows():
-                        if pd.notna(row['sigungu']):
-                            coords_dict[row['sigungu']] = (row['lat'], row['lon'])
+                    json_path = os.path.join(script_dir, 'sigungu_coordinates.json')
+                    
+                    # JSON 파일 읽기
+                    with open(json_path, 'r', encoding='utf-8') as f:
+                        coords_dict = json.load(f)
+                    
+                    # 좌표 튜플로 변환
+                    for location, coords in coords_dict.items():
+                        coords_dict[location] = (coords['lat'], coords['lon'])
+                    
                     return coords_dict
                 except Exception as e:
                     st.error(f"시군구 좌표 로드 중 오류: {e}")
