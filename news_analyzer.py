@@ -321,9 +321,6 @@ if uploaded_file is not None:
                 from wordcloud import WordCloud
                 import matplotlib.pyplot as plt
                 
-                # 스트림릿 플롯 설정
-                st.set_option('deprecation.showPyplotGlobalUse', False)
-                
                 # 워드클라우드 생성
                 wordcloud = WordCloud(
                     width=800,
