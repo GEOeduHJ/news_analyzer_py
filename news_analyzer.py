@@ -128,21 +128,45 @@ if uploaded_file is not None:
     st.header("🗺️ 분석 0: 지명 빈도수 히트맵")
     
     if '키워드' in display_df.columns:
-        @st.cache_data
+        @st.cache_data(ttl=3600)  # 1시간 동안 캐시 유지
         def load_sigungu_coordinates():
-            """시군구 좌표 데이터를 JSON 파일에서 로드"""
-            import json
-            import os
+            """GitHub에서 시군구 좌표 데이터 로드"""
+            import pandas as pd
+            
+            # GitHub raw URL - 여기를 실제 GitHub raw URL로 변경해주세요
+            GITHUB_RAW_URL = "https://raw.githubusercontent.com/GEOeduHJ/news_analyzer_py/refs/heads/main/sigungu_coordinates.csv"
             
             try:
-                # JSON 파일에서 좌표 데이터 로드
-                json_path = os.path.join(os.path.dirname(__file__), 'sigungu_coordinates.json')
-                with open(json_path, 'r', encoding='utf-8') as f:
-                    coords_dict = json.load(f)
+                # GitHub에서 CSV 파일 로드
+                df = pd.read_csv(GITHUB_RAW_URL)
+                
+                # 필요한 컬럼이 있는지 확인
+                required_columns = ['sido', 'sigungu', 'lat', 'lon']
+                if not all(col in df.columns for col in required_columns):
+                    st.error("CSV 파일 형식이 올바르지 않습니다. 'sido', 'sigungu', 'lat', 'lon' 컬럼이 필요합니다.")
+                    return {}
+                
+                # 시군구명을 키로, 위도와 경도를 값으로 하는 딕셔너리 생성
+                coords_dict = {}
+                for _, row in df.iterrows():
+                    location = row['sigungu']
+                    try:
+                        coords_dict[location] = {
+                            'lat': float(row['lat']),
+                            'lon': float(row['lon'])
+                        }
+                    except (ValueError, TypeError):
+                        continue  # 유효하지 않은 좌표는 건너뜁니다
+                
+                if not coords_dict:
+                    st.error("유효한 좌표 데이터를 찾을 수 없습니다.")
+                    return {}
+                    
                 return coords_dict
                 
             except Exception as e:
-                st.error(f"시군구 좌표 데이터를 로드하는 중 오류가 발생했습니다: {e}")
+                st.error(f"GitHub에서 시군구 좌표 데이터를 로드하는 중 오류가 발생했습니다: {e}")
+                st.info(f"URL 확인: {GITHUB_RAW_URL}")
                 return {}
                 
         # 시군구 좌표 데이터 로드
