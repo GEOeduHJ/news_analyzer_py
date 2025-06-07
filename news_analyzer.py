@@ -115,7 +115,9 @@ if uploaded_file is not None:
             def load_sigungu_coordinates():
                 """시군구 좌표 데이터를 로드"""
                 try:
-                    coords_df = pd.read_csv('sigungu_coordinates.csv', encoding='utf-8-sig')
+                    # 현재 스크립트의 디렉토리 경로를 기준으로 파일 찾기
+                    script_dir = Path(__file__).parent
+                    coords_df = pd.read_csv(script_dir / 'sigungu_coordinates.csv', encoding='utf-8-sig')
                     # 좌표 사전 생성 (시군구명 -> (위도, 경도))
                     coords_dict = {}
                     for _, row in coords_df.iterrows():
