@@ -320,8 +320,9 @@ if uploaded_file is not None:
                 # wordcloud 라이브러리를 사용하여 워드클라우드 생성
                 from wordcloud import WordCloud
                 import matplotlib.pyplot as plt
-                from io import BytesIO
-                import base64
+                
+                # 스트림릿 플롯 설정
+                st.set_option('deprecation.showPyplotGlobalUse', False)
                 
                 # 워드클라우드 생성
                 wordcloud = WordCloud(
@@ -334,27 +335,14 @@ if uploaded_file is not None:
                     random_state=42
                 )
                 
-                # 워드클라우드에 단어 추가
+                # 워드클라우드에 단어 추가 및 표시
                 wordcloud.generate_from_frequencies(top_keywords)
-                
-                # 이미지를 스트림릿에 표시하기 위해 BytesIO에 저장
-                img = BytesIO()
                 plt.figure(figsize=(10, 6))
                 plt.imshow(wordcloud, interpolation='bilinear')
                 plt.axis('off')
                 plt.tight_layout(pad=0)
-                plt.savefig(img, format='png', bbox_inches='tight', pad_inches=0)
+                st.pyplot(plt.gcf())
                 plt.close()
-                
-                # Base64로 인코딩하여 이미지 표시
-                img.seek(0)
-                img_b64 = base64.b64encode(img.getvalue()).decode()
-                st.markdown(
-                    f'<div style="text-align: center;">'
-                    f'<img src="data:image/png;base64,{img_b64}" style="max-width: 100%; height: auto;"/>'
-                    f'</div>',
-                    unsafe_allow_html=True
-                )
                 
             except Exception as e:
                 st.error(f'워드클라우드 생성 중 오류가 발생했습니다: {str(e)}')
