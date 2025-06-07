@@ -321,7 +321,8 @@ if uploaded_file is not None:
                 # JavaScript 코드 내의 중괄호를 이중으로 처리하여 f-string 충돌 방지
                 words_js_str = json.dumps(words_js, ensure_ascii=False)
                 
-                wordcloud_html = f"""
+                # HTML 템플릿을 별도 문자열로 정의
+                wordcloud_html = """
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -332,39 +333,40 @@ if uploaded_file is not None:
                     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
                     <style>
                         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
-                        @font-face {{
+                        @font-face {
                             font-family: 'Noto Sans KR';
                             font-style: normal;
                             font-weight: 400;
                             src: url(https://fonts.gstatic.com/s/notosanskr/v36/PbykFmXiEBPT4ITbgNA5CgmOsk7A.otf) format('opentype');
-                        }}
-                        body {{
+                        }
+                        body {
                             font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
                             margin: 0;
                             overflow: hidden;
-                        }}
-                        #wordcloud {{
+                        }
+                        #wordcloud {
                             width: 100%;
                             height: 500px;
-                        }}
-                        .word {{
+                        }
+                        .word {
                             cursor: pointer;
                             transition: all 0.2s ease-out;
                             opacity: 0.9;
-                        }}
-                        .word:hover {{
+                        }
+                        .word:hover {
                             fill: #2c7be5 !important;
                             opacity: 1;
                             text-shadow: 0 0 8px rgba(44, 123, 229, 0.3);
                             transform: translateY(-2px);
-                        }}
+                        }
                     </style>
                 </head>
                 <body>
                     <div id="wordcloud"></div>
                     <script>
                         // 워드클라우드 데이터
-                        const words = {words_js_str};
+                        const words = """ + {words_js_str} + """;
+                        const wordsData = JSON.parse(words);
                         
                         // 차트 크기 설정
                         const width = document.getElementById('wordcloud').offsetWidth;
@@ -376,11 +378,11 @@ if uploaded_file is not None:
                         // 워드클라우드 레이아웃 설정
                         const layout = d3.layout.cloud()
                             .size([width, height])
-                            .words(words)
+                            .words(wordsData)
                             .padding(5)
-                            .rotate(() => Math.random() > 0.5 ? 0 : 90)
+                            .rotate(function() {{ return Math.random() > 0.5 ? 0 : 90; }})
                             .font("Noto Sans KR")
-                            .fontSize(d => d.size)
+                            .fontSize(function(d) {{ return d.size; }})
                             .on("end", draw);
                         
                         // 워드클라우드 그리기
@@ -414,10 +416,9 @@ if uploaded_file is not None:
                             layout.size([document.getElementById('wordcloud').offsetWidth, height]).start();
                         }}, false);
                     </script>
-                    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
                 </body>
                 </html>
-                """
+                """.format(words_js_str=words_js_str)
                 
                 # HTML 표시
                 st.components.v1.html(wordcloud_html, height=550)
