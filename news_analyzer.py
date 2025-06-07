@@ -11,6 +11,7 @@ from folium.plugins import HeatMap
 from streamlit_folium import folium_static
 import matplotlib.pyplot as plt
 import os
+import json
 plt.rcParams['font.family'] = 'Malgun Gothic'
 plt.rcParams['axes.unicode_minus'] = False
 
