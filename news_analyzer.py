@@ -203,7 +203,7 @@ if uploaded_file is not None:
     st.markdown("---")
     st.header("🗺️ 분석 1: 지명 빈도수 히트맵")
     
-    if '키워드' in display_df.columns:
+    if '관련기관' in display_df.columns:
         @st.cache_data(ttl=3600)  # 1시간 동안 캐시 유지
         def load_sigungu_coordinates():
             """GitHub에서 시군구 좌표 데이터 로드"""
@@ -249,38 +249,41 @@ if uploaded_file is not None:
         coords_dict = load_sigungu_coordinates()
             
         if coords_dict:
-            # 키워드에서 지명 추출 및 빈도수 계산
-            def get_location_frequency(keywords_series, coords_dict):
-                """키워드 시리즈에서 지명 빈도수를 계산"""
+            def get_org_location_frequency(org_series, coords_dict):
+                """관련기관 시리즈에서 지명 빈도수를 계산"""
                 location_counts = defaultdict(int)
-
-                # 모든 시군구명에서 접미사를 제거한 기본 이름만 저장
-                base_names = {loc: loc.replace('시', '').replace('군', '').replace('구', '') 
-                            for loc in coords_dict.keys()}
-    
-                for keywords in keywords_series.dropna():
-                    if not isinstance(keywords, str):
+                
+                # 제외할 일반적인 구 이름 목록
+                excluded_districts = {'북구', '남구', '동구', '서구', '중구'}
+                
+                # 시군구명에서 제외할 구 이름을 필터링하여 저장
+                filtered_locations = {
+                    loc: loc.replace('시', '').replace('군', '').replace('구', '')
+                    for loc in coords_dict.keys()
+                    if not any(excluded in loc for excluded in excluded_districts)
+                }
+                
+                for orgs in org_series.dropna():
+                    if not isinstance(orgs, str):
                         continue
-                    
-                    # 한국어 키워드를 다양한 구분자로 분리
-                    for kw in re.split(r'[\s,;:/()]+', keywords.strip()):
-                        kw = kw.strip()
-                        if not kw or len(kw) < 2:
-                            continue
                         
-                        # 접미사 제거한 키워드로 비교
-                        kw_base = kw.replace('시', '').replace('군', '').replace('구', '')
+                    # 관련기관을 쉼표로 분리하고 공백 제거
+                    org_list = [org.strip() for org in orgs.split(',') if org.strip()]
                     
-                        # 모든 시군구명과 비교
-                        for location, base_name in base_names.items():
-                            if base_name in kw_base:
+                    for org in org_list:
+                        # 괄호 안의 내용 제거 (예: '서울시청(서울특별시)' -> '서울시청')
+                        org = re.sub(r'\([^)]*\)', '', org).strip()
+                        
+                        # 기관명에서 시/군/구 추출
+                        for location, base_name in filtered_locations.items():
+                            if base_name and base_name in org:
                                 location_counts[location] += 1
                                 break
-
+                                
                 return location_counts
                 
             # 지명 빈도수 계산
-            location_counts = get_location_frequency(display_df['키워드'], coords_dict)
+            location_counts = get_org_location_frequency(display_df['관련기관'], coords_dict)
     
             if location_counts and sum(location_counts.values()) > 0:
                 # 히트맵 생성
@@ -349,7 +352,7 @@ if uploaded_file is not None:
                     use_container_width=True
                     )
             else:
-                st.warning("키워드에서 인식된 지명이 없습니다.")
+                st.warning("관련기관에서 인식된 지명이 없습니다.")
             
         # 연도별 기사 수 분석
         st.markdown("---")
