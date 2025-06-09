@@ -109,10 +109,94 @@ if uploaded_file is not None:
         display_df = news_df
         
     # 데이터 표시 설정
-    st.dataframe(
-        display_df[["작성/게시일자", "기사제목", "관련기관", "키워드", "기사링크"]].head(50),
-        use_container_width=True
+    display_df = display_df.copy()
+    
+    # 날짜 형식 변환 (원본 데이터는 유지하고 보여주기용 컬럼 생성)
+    if '작성/게시일자' in display_df.columns:
+        display_df['표시용_작성일자'] = pd.to_datetime(
+            display_df['작성/게시일자'].astype(str).str.replace('[^0-9]', ''),  # 숫자만 남기기
+            format='%Y%m%d',
+            errors='coerce'  # 유효하지 않은 날짜는 NaT로 변환
+        ).dt.strftime('%Y.%m.%d')
+        
+        # 연도 컬럼이 없는 경우 생성 (분석용)
+        if '연도' not in display_df.columns:
+            display_df['연도'] = display_df['작성/게시일자'].astype(str).str[:4]
+    
+    # 표시할 컬럼 선택 (연도 컬럼은 분석용으로 유지)
+    display_columns = ["표시용_작성일자", "기사제목", "관련기관", "키워드", "기사링크"]
+    display_columns = [col for col in display_columns if col in display_df.columns]
+    
+    # 페이지네이션 설정
+    items_per_page = st.select_slider(
+        "페이지당 표시할 데이터 수",
+        options=[10, 50, 100, 200, 500],
+        value=100,
+        key="items_per_page"
     )
+    
+    # 총 페이지 수 계산
+    total_pages = max(1, (len(display_df) - 1) // items_per_page + 1)
+    
+    # 페이지 선택 버튼
+    col1, col2, _ = st.columns([1, 2, 3])
+    with col1:
+        st.write(f"총 {len(display_df):,}개 항목 / {total_pages}페이지")
+    
+    # 페이지네이션 컨트롤
+    if total_pages > 1:
+        page_cols = st.columns(min(10, total_pages + 2))
+        
+        # 이전 페이지 버튼
+        with page_cols[0]:
+            prev_page = st.button("◀", key="prev_page")
+            if prev_page and st.session_state.get('current_page', 1) > 1:
+                st.session_state['current_page'] -= 1
+        
+        # 페이지 번호 버튼
+        current_page = st.session_state.get('current_page', 1)
+        start_page = max(1, min(current_page - 4, total_pages - 8))
+        end_page = min(start_page + 9, total_pages)
+        
+        for i, col in enumerate(page_cols[1:-1]):
+            page_num = start_page + i
+            if page_num > end_page:
+                break
+                
+            with col:
+                if st.button(str(page_num), key=f"page_{page_num}"):
+                    st.session_state['current_page'] = page_num
+        
+        # 다음 페이지 버튼
+        with page_cols[-1]:
+            next_page = st.button("▶", key="next_page")
+            if next_page and st.session_state.get('current_page', 1) < total_pages:
+                st.session_state['current_page'] += 1
+        
+        current_page = st.session_state.get('current_page', 1)
+    else:
+        current_page = 1
+    
+    # 현재 페이지에 해당하는 데이터 추출
+    start_idx = (current_page - 1) * items_per_page
+    end_idx = min(current_page * items_per_page, len(display_df))
+    
+    # 데이터 표시 (컬럼명을 깔끔하게 표시)
+    display_df_renamed = display_df[display_columns].rename(columns={
+        '표시용_작성일자': '작성/게시일자'
+    })
+    
+    st.dataframe(
+        display_df_renamed.iloc[start_idx:end_idx],
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "기사링크": st.column_config.LinkColumn("기사링크", display_text="링크 이동")
+        }
+    )
+    
+    # 현재 표시 중인 데이터 범위 표시
+    st.caption(f"{start_idx + 1:,} - {end_idx:,} / 총 {len(display_df):,}개 (페이지 {current_page}/{total_pages})")
         
     
     # 지명 빈도수 히트맵
