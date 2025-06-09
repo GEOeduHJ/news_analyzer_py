@@ -412,7 +412,7 @@ if uploaded_file is not None:
                             """,
                             unsafe_allow_html=True
                         )
-                        folium_static(heatmap, width=800, height=600)
+                        folium_static(heatmap, width=400, height=600)
                         st.markdown("</div>", unsafe_allow_html=True)
                     
                 # 상위 20개 지명 표시
