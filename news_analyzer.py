@@ -201,7 +201,7 @@ if uploaded_file is not None:
     
     # 지명 빈도수 히트맵
     st.markdown("---")
-    st.header("🗺️ 분석 0: 지명 빈도수 히트맵")
+    st.header("🗺️ 분석 1: 지명 빈도수 히트맵")
     
     if '키워드' in display_df.columns:
         @st.cache_data(ttl=3600)  # 1시간 동안 캐시 유지
@@ -353,7 +353,7 @@ if uploaded_file is not None:
             
         # 연도별 기사 수 분석
         st.markdown("---")
-        st.header("🗺️ 분석 1: 연도별 기사 수 분석")
+        st.header("🗺️ 분석 2: 연도별 기사 수 분석")
         
         if '연도' in display_df.columns:
             year_counts = display_df["연도"].value_counts().sort_index()
@@ -371,7 +371,7 @@ if uploaded_file is not None:
         
         # 키워드 워드클라우드 분석
         st.markdown("---")
-        st.header("☁️ 분석 2: 키워드 워드클라우드")
+        st.header("☁️ 분석 3: 키워드 워드클라우드")
         
         if '키워드' in display_df.columns:
             # 키워드 처리
@@ -443,7 +443,7 @@ if uploaded_file is not None:
             
         # 기관 네트워크 분석
         st.markdown("---")
-        st.header("🕸️ 분석 3: 기관 네트워크 분석")
+        st.header("🕸️ 분석 4: 기관 네트워크 분석")
         
         if '관련기관' in display_df.columns:
             # 기관 네트워크 분석
