@@ -29,8 +29,48 @@ st.set_page_config(
 # 제목
 st.title("📰 뉴스 데이터 분석 대시보드")
 
-# 파일 업로드
-uploaded_file = st.file_uploader("뉴스 데이터 파일을 업로드하세요 (xlsx)", type=["xlsx"])
+# 파일 업로드 섹션
+col1, col2 = st.columns([3, 1])
+
+with col1:
+    uploaded_file = st.file_uploader("뉴스 데이터 파일을 업로드하세요 (xlsx)", type=["xlsx"])
+
+with col2:
+    st.markdown("<div style='height: 29px; display: flex; align-items: center;'>\n    <span style='margin-right: 10px;'>또는</span>\n    </div>", unsafe_allow_html=True)
+
+# 예시 데이터 로드
+@st.cache_data(ttl=3600)
+def load_example_data():
+    """GitHub에서 예시 데이터 로드"""
+    EXAMPLE_DATA_URL = "https://raw.githubusercontent.com/GEOeduHJ/news_analyzer_py/main/example_news_data.xlsx"
+    try:
+        # GitHub에서 직접 바이너리 데이터로 읽기
+        import requests
+        from io import BytesIO
+        
+        response = requests.get(EXAMPLE_DATA_URL)
+        response.raise_for_status()  # 오류가 발생하면 예외 발생
+        return BytesIO(response.content)
+    except Exception as e:
+        st.error(f"예시 데이터를 로드하는 중 오류가 발생했습니다: {e}")
+        return None
+
+# 예시 데이터 로드 버튼
+if st.button("📋 예시 데이터 사용하기", use_container_width=True):
+    example_data = load_example_data()
+    if example_data:
+        uploaded_file = example_data
+        st.success("예시 데이터가 성공적으로 로드되었습니다!")
+        st.balloons()
+
+# 세션 상태에 파일 저장
+if 'uploaded_file' not in st.session_state:
+    st.session_state.uploaded_file = None
+
+if uploaded_file is not None:
+    st.session_state.uploaded_file = uploaded_file
+else:
+    uploaded_file = st.session_state.uploaded_file
 
 # 데이터 처리 함수
 def process_data(uploaded_file):
@@ -313,11 +353,28 @@ if uploaded_file is not None:
                     # 지도 생성 (한국 중심)
                     m = folium.Map(location=[36.5, 127.5], zoom_start=7, tiles='cartodbpositron')
                         
-                    # 히트맵 데이터 준비
-                    heat_data = [[row['lat'], row['lon'], row['count']] for _, row in df_locations.iterrows()]
+                    # 히트맵 데이터 준비 (정규화된 가중치 적용)
+                    max_count = df_locations['count'].max()
+                    min_count = df_locations['count'].min()
+                    
+                    # 최소값이 최대값과 같은 경우를 대비해 분모 조정
+                    count_range = max(1, max_count - min_count)
+                    
+                    heat_data = []
+                    for _, row in df_locations.iterrows():
+                        # 정규화된 가중치 계산 (1.0 ~ 5.0 범위로 스케일링)
+                        normalized_weight = 1.0 + 4.0 * (row['count'] - min_count) / count_range
+                        heat_data.append([row['lat'], row['lon'], normalized_weight])
                         
-                    # 히트맵 추가
-                    HeatMap(heat_data, radius=15, blur=10).add_to(m)
+                    # 히트맵 추가 (radius와 blur 조정)
+                    HeatMap(
+                        heat_data,
+                        radius=20,  # 반경 증가
+                        blur=15,     # 블러 효과 증가
+                        max_zoom=12,  # 최대 줌 레벨 제한
+                        min_opacity=0.5,  # 최소 불투명도 설정
+                        gradient={0.4: 'blue', 0.6: 'lime', 0.8: 'orange', 1.0: 'red'}  # 그라데이션 색상 지정
+                    ).add_to(m)
                         
                     # 상위 10개 지명에 마커 추가
                     top_locations = df_locations.nlargest(10, 'count')
