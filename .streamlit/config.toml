@@ -15,9 +15,9 @@ serverPort = 8501
 
 [theme]
 # Set the default theme
-base = "light"
-primaryColor = "#FF4B4B"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F0F2F6"
-textColor = "#262730"
+base = "dark"
+primaryColor = "#1DB954"  # 선택사항: 강조 색상 설정
+backgroundColor = "#000000"  # 검정 배경
+secondaryBackgroundColor = "#1a1a1a"  # 카드 등 배경
+textColor = "#FFFFFF"  # 흰색 텍스트
 font = "sans serif"

@@ -84,7 +84,7 @@ if uploaded_file is not None:
         st.header("📊 데이터 탐색")
         
         # 검색 기능 추가
-        search_text = st.text_input("검색어 입력", "")
+        search_text = st.text_input("검색어 입력", "", placeholder="여기에 검색어를 입력하세요")
     except Exception as e:
         st.error(f"데이터 처리 중 오류가 발생했습니다: {str(e)}")
         st.info("오류가 발생하여 분석을 종료합니다.")
@@ -114,6 +114,7 @@ if uploaded_file is not None:
         use_container_width=True
     )
         
+    
     # 지명 빈도수 히트맵
     st.markdown("---")
     st.header("🗺️ 분석 0: 지명 빈도수 히트맵")
@@ -323,12 +324,12 @@ if uploaded_file is not None:
                 
                 # 워드클라우드 생성
                 wordcloud = WordCloud(
-                    width=800,
-                    height=500,
+                    width=500,
+                    height=200,
                     background_color='white',
                     font_path='CookieRun Regular.ttf',  # 프로젝트 폴더의 CookieRun 폰트 사용
                     max_words=top_n,
-                    max_font_size=200,
+                    max_font_size=100,
                     random_state=42
                 )
                 

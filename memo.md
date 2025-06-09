@@ -40,3 +40,5 @@ deactivate
 생성형 AI 기반 인터뷰: https://georegionchat.netlify.app/
 투닝: https://tooning.io/
 
+csv 경로: https://raw.githubusercontent.com/GEOeduHJ/news_analyzer_py/refs/heads/main/sigungu_coordinates.csv
+
