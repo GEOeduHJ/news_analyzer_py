@@ -39,7 +39,7 @@ ENV/
 Thumbs.db
 
 # Data Files
-*.xlsx
+
 *.csv
 
 # Logs

@@ -390,11 +390,30 @@ if uploaded_file is not None:
                         
                     return m
                     
-                # 히트맵 생성 및 표시
+                # 히트맵 생성 및 표시 (반응형)
                 st.markdown("### 🗺️ 지명 빈도수 히트맵")
-                heatmap = create_heatmap(location_counts, coords_dict)
-                if heatmap:
-                    folium_static(heatmap, width=800, height=600)
+                
+                # 컨테이너에 지도 표시 (좌우 여백 조정)
+                col1, col2, col3 = st.columns([1, 8, 1])
+                with col2:
+                    heatmap = create_heatmap(location_counts, coords_dict)
+                    if heatmap:
+                        # 스타일을 적용한 컨테이너
+                        st.markdown(
+                            """
+                            <style>
+                            .map-container {
+                                width: 100%;
+                                max-width: 100%;
+                                margin: 0 auto;
+                            }
+                            </style>
+                            <div class="map-container">
+                            """,
+                            unsafe_allow_html=True
+                        )
+                        folium_static(heatmap, width=800, height=600)
+                        st.markdown("</div>", unsafe_allow_html=True)
                     
                 # 상위 20개 지명 표시
                 st.markdown("### 📊 지명 빈도수 Top 20")
